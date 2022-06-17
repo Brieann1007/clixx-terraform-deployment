@@ -11,26 +11,23 @@ locals {
 }
 
 #Extract subnet id from given VPC
-data "aws_subnets" "stack_subs" {
-  filter {
-    name = "vpc-id"
-    values = ["var.vpc_id"]
-  }
+data "aws_subnet_ids" "subnet_ids" {
+  vpc_id = var.vpc_id
 }
 
-data "aws_subnet" "stack_subnets" {
-  for_each = data.aws_subnets.stack_subs.ids
+data "aws_subnet" "subnet_ids" {
+  for_each = data.aws_subnet_ids.subnet_ids.ids
   id       = each.value
 }
 
 #Print to standard out subnet id that has been iterated from given VPC
-output "subnet_id" {
+output "subnet_ids" {
   #value = [for s in data.aws_subnet.stack_subnets : s.cidr_block]
-  value = [for s in data.aws_subnet.stack_subnets : s.id]
+  value = [for s in data.aws_subnet.subnet_ids : s.id]
 }
 
 resource "aws_instance" "Server" {
-  for_each = data.aws_subnet_ids.stack_sub_id_list.ids  //create an ec2 instance for each existing subnet
+  for_each = data.aws_subnet_ids.subnet_ids.ids  //create an ec2 instance for each existing subnet
   subnet_id     = each.key  //Create an EC2 Instance for each subnet
 #   ami           = data.aws_ami.stack_ami.id
   ami = var.ami_id
